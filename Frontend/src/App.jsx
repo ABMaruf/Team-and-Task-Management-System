@@ -13,6 +13,7 @@ import ProfilePage from './pages/ProfilePage';
 import TeamManagementPage from './pages/TeamManagementPage';
 import CalendarPage from './pages/CalendarPage';
 import NotFoundPage from './pages/NotFoundPage';
+import GithubCallbackPage from './pages/GithubCallbackPage';
 
 // Components
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -37,6 +38,10 @@ function App() {
         <Route 
           path="/register" 
           element={user ? <Navigate to="/dashboard" /> : <RegisterPage />} 
+        />
+        <Route
+          path="/oauth/github"
+          element={user ? <Navigate to="/dashboard" /> : <GithubCallbackPage />}
         />
 
         {/* Protected Routes */}

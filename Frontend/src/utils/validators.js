@@ -4,6 +4,23 @@ export const validateEmail = (email) => {
   return re.test(String(email).toLowerCase());
 };
 
+const allowedEmailDomains = [
+  'gmail.com',
+  'googlemail.com',
+  'hotmail.com',
+  'outlook.com',
+  'live.com',
+  'yahoo.com',
+  'ymail.com'
+];
+
+const isAllowedEmailDomain = (email) => {
+  if (!email) return false;
+  const domain = String(email).split('@')[1]?.toLowerCase();
+  if (!domain) return false;
+  return allowedEmailDomains.includes(domain);
+};
+
 // Validate password strength
 export const validatePassword = (password) => {
   // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
@@ -74,6 +91,8 @@ export const validateLoginForm = (formData) => {
     errors.email = 'Email is required';
   } else if (!validateEmail(formData.email)) {
     errors.email = 'Invalid email format';
+  } else if (!isAllowedEmailDomain(formData.email)) {
+    errors.email = 'Use a Gmail, Hotmail, Outlook, or Yahoo address';
   }
 
   if (!validateRequired(formData.password)) {

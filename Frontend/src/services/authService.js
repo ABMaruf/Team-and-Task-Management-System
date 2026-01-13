@@ -1,5 +1,6 @@
 import api from './api';
 import { mockAuthApi } from './mockData';
+import { unwrapResponse } from './unwrapResponse';
 
 const mockEnabled = import.meta.env.VITE_USE_MOCK === 'true';
 
@@ -21,6 +22,22 @@ export const login = async (email, password) => {
   return response.data;
 };
 
+export const loginWithGoogle = async (credential) => {
+  if (mockEnabled) {
+    return mockAuthApi.login({ email: 'google@example.com', password: 'mock' });
+  }
+  const response = await api.post('/auth/google', { credential });
+  return response.data;
+};
+
+export const exchangeGithubCode = async (code) => {
+  if (mockEnabled) {
+    return mockAuthApi.login({ email: 'github@example.com', password: 'mock' });
+  }
+  const response = await api.post('/auth/github/exchange', { code });
+  return response.data;
+};
+
 // Logout user
 export const logout = async () => {
   if (mockEnabled) {
@@ -36,7 +53,7 @@ export const getCurrentUser = async () => {
     return mockAuthApi.getCurrentUser();
   }
   const response = await api.get('/auth/me');
-  return response.data;
+  return unwrapResponse(response.data);
 };
 
 // Refresh token

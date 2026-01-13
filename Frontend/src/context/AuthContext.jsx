@@ -180,6 +180,42 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (credential) => {
+    try {
+      const response = await authService.loginWithGoogle(credential);
+      const sessionData = persistSessionResponse(response, { user: response.user });
+      if (sessionData) {
+        scheduleRefresh(sessionData);
+      }
+      setUser(response.user);
+      toast.success('Login successful!');
+      navigate('/dashboard');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Google sign-in failed';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const loginWithGithub = async (code) => {
+    try {
+      const response = await authService.exchangeGithubCode(code);
+      const sessionData = persistSessionResponse(response, { user: response.user });
+      if (sessionData) {
+        scheduleRefresh(sessionData);
+      }
+      setUser(response.user);
+      toast.success('Login successful!');
+      navigate('/dashboard');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'GitHub sign-in failed';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   // Register function
   const register = async (userData) => {
     try {
@@ -209,6 +245,8 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     login,
+    loginWithGoogle,
+    loginWithGithub,
     register,
     logout,
     updateUser,

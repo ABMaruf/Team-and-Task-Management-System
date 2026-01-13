@@ -27,38 +27,38 @@ const ActivityFeed = () => {
     if (activity.type === 'comment' && activity.comment) {
       return (
         <p className={`mt-2 text-xs italic ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          “{activity.comment}”
+          "{activity.comment}"
         </p>
       );
     }
 
     if (activity.type === 'status') {
       return (
-        <p className="mt-1 text-xs text-gray-500">
-          {activity.meta?.fromStatus} → {activity.meta?.toStatus}
+        <p className={`mt-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {activity.meta?.fromStatus} -> {activity.meta?.toStatus}
         </p>
       );
     }
 
     if (activity.type === 'assignment') {
       return (
-        <p className="mt-1 text-xs text-gray-500">
-          {activity.meta?.fromAssignee?.name || 'Unassigned'} → {activity.meta?.toAssignee?.name || 'Unassigned'}
+        <p className={`mt-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {activity.meta?.fromAssignee?.name || 'Unassigned'} -> {activity.meta?.toAssignee?.name || 'Unassigned'}
         </p>
       );
     }
 
     if (activity.type === 'priority') {
       return (
-        <p className="mt-1 text-xs text-gray-500">
-          {activity.meta?.fromPriority} → {activity.meta?.toPriority}
+        <p className={`mt-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+          {activity.meta?.fromPriority} -> {activity.meta?.toPriority}
         </p>
       );
     }
 
     if (activity.type === 'team') {
       return (
-        <p className="mt-1 text-xs text-gray-500">
+        <p className={`mt-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           {activity.meta?.description || 'Workspace settings change'}
         </p>
       );
@@ -101,7 +101,7 @@ const ActivityFeed = () => {
                 <span className="font-semibold">{activity.task}</span>
               </p>
               {renderDetails(activity)}
-              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+              <div className={`mt-2 flex items-center gap-2 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {getIcon(activity)}
                 <span>{getTimeAgo(new Date(activity.time))}</span>
               </div>
@@ -109,7 +109,7 @@ const ActivityFeed = () => {
           </div>
         ))}
         {activities.length === 0 && (
-          <p className={`text-sm text-center ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+          <p className={`text-sm text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             No activity yet. Your updates will appear here.
           </p>
         )}

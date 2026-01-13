@@ -178,7 +178,7 @@ const CalendarPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main
         className={`pt-20 pb-10 transition-all duration-300 ${sidebarOpen ? 'md:pl-72' : 'md:pl-20'} px-4`}
       >
@@ -205,15 +205,15 @@ const CalendarPage = () => {
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className={`rounded-2xl border p-4 ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-white'}`}>
-              <p className="text-sm text-gray-500">Due this month</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Due this month</p>
               <p className="mt-2 text-3xl font-semibold text-indigo-500">{monthTaskCount}</p>
             </div>
             <div className={`rounded-2xl border p-4 ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-white'}`}>
-              <p className="text-sm text-gray-500">Overdue</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Overdue</p>
               <p className="mt-2 text-3xl font-semibold text-rose-500">{overdueCount}</p>
             </div>
             <div className={`rounded-2xl border p-4 ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-white'}`}>
-              <p className="text-sm text-gray-500">Next 7 days</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Next 7 days</p>
               <p className="mt-2 text-3xl font-semibold text-emerald-500">{upcomingCount}</p>
             </div>
           </div>
@@ -228,7 +228,7 @@ const CalendarPage = () => {
                   name="search"
                   value={filters.search}
                   onChange={handleFilterChange}
-                  className="bg-transparent outline-none"
+                  className="bg-transparent outline-none text-gray-900 placeholder-gray-400 dark:text-gray-100 dark:placeholder-gray-500"
                   placeholder="Search tasks"
                 />
               </div>
@@ -236,7 +236,7 @@ const CalendarPage = () => {
                 name="priority"
                 value={filters.priority}
                 onChange={handleFilterChange}
-                className="rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
               >
                 <option value="">All priorities</option>
                 <option value="high">High</option>
@@ -247,7 +247,7 @@ const CalendarPage = () => {
                 name="status"
                 value={filters.status}
                 onChange={handleFilterChange}
-                className="rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
               >
                 <option value="">All statuses</option>
                 <option value="todo">To Do</option>
@@ -259,7 +259,7 @@ const CalendarPage = () => {
                 name="assignee"
                 value={filters.assignee}
                 onChange={handleFilterChange}
-                className="rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
               >
                 <option value="">All assignees</option>
                 {members.map((member) => (
@@ -282,7 +282,7 @@ const CalendarPage = () => {
                 <CalendarDays className="text-indigo-500" />
                 <div>
                   <p className="text-lg font-semibold text-gray-900 dark:text-white">{monthLabel}</p>
-                  <p className="text-xs text-gray-500">Click a date to view due tasks</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Click a date to view due tasks</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -380,7 +380,7 @@ const CalendarPage = () => {
             </div>
             <div className="mt-4 space-y-4">
               {selectedTasks.length === 0 ? (
-                <p className="text-sm text-gray-500">No tasks due on this day.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No tasks due on this day.</p>
               ) : (
                 selectedTasks.map((task) => (
                   <div
@@ -390,13 +390,15 @@ const CalendarPage = () => {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <p className="text-base font-semibold text-gray-900 dark:text-white">{task.title}</p>
-                        <p className="text-sm text-gray-500">{task.description || 'No description provided.'}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {task.description || 'No description provided.'}
+                        </p>
                       </div>
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[task.status] || statusStyles.todo}`}>
                         {task.status ? task.status.replace(/_/g, ' ') : 'Unknown'}
                       </span>
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                    <div className={`mt-3 flex flex-wrap items-center gap-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                       <div className="flex items-center gap-2">
                         <Clock size={16} />
                         <span>{new Date(task.dueDate).toLocaleDateString()}</span>

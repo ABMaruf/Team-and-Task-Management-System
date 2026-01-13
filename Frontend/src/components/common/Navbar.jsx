@@ -21,7 +21,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={`p-2 rounded-lg ${
-              darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+              darkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'
             } transition-colors`}
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}

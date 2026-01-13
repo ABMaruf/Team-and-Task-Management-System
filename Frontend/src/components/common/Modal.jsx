@@ -48,7 +48,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
           <button
             onClick={onClose}
             className={`p-2 rounded-lg transition-colors ${
-              darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+              darkMode ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-100 text-gray-600'
             }`}
           >
             <X size={20} />

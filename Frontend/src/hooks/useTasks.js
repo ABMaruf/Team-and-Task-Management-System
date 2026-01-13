@@ -41,8 +41,8 @@ export const useTasks = (filters = {}) => {
   const updateTask = async (taskId, taskData) => {
     try {
       const updatedTask = await taskService.updateTask(taskId, taskData);
-      setTasks(prev => 
-        prev.map(task => task.id === taskId ? updatedTask : task)
+      setTasks(prev =>
+        prev.map(task => String(task.id) === String(taskId) ? updatedTask : task)
       );
       toast.success('Task updated successfully');
       return { success: true, data: updatedTask };
@@ -57,7 +57,7 @@ export const useTasks = (filters = {}) => {
   const deleteTask = async (taskId) => {
     try {
       await taskService.deleteTask(taskId);
-      setTasks(prev => prev.filter(task => task.id !== taskId));
+      setTasks(prev => prev.filter(task => String(task.id) !== String(taskId)));
       toast.success('Task deleted successfully');
       return { success: true };
     } catch (err) {
@@ -71,8 +71,8 @@ export const useTasks = (filters = {}) => {
   const updateTaskStatus = async (taskId, status) => {
     try {
       const updatedTask = await taskService.updateTaskStatus(taskId, status);
-      setTasks(prev => 
-        prev.map(task => task.id === taskId ? updatedTask : task)
+      setTasks(prev =>
+        prev.map(task => String(task.id) === String(taskId) ? updatedTask : task)
       );
       toast.success('Task status updated');
       return { success: true, data: updatedTask };

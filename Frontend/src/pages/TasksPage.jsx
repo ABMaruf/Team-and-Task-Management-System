@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Calendar,
   RefreshCcw,
@@ -105,7 +106,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
               name="title"
               value={formState.title}
               onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
               placeholder="Add a task title"
               required
             />
@@ -116,7 +117,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
               name="assigneeId"
               value={formState.assigneeId}
               onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
             >
               <option value="">Unassigned</option>
               {members.map((member) => (
@@ -135,7 +136,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
             value={formState.description}
             onChange={handleChange}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+            className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
             placeholder="Add context or acceptance criteria"
           />
         </div>
@@ -147,7 +148,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
               name="priority"
               value={formState.priority}
               onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
             >
               {priorityOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -162,7 +163,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
               name="status"
               value={formState.status}
               onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -178,7 +179,7 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
               name="dueDate"
               value={formState.dueDate}
               onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark] date-input"
             />
           </div>
         </div>
@@ -223,7 +224,9 @@ const TaskCard = ({
       </span>
     </div>
 
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+    <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 text-xs ${
+      darkMode ? 'text-gray-400' : 'text-gray-500'
+    }`}>
       <div className="flex items-center gap-2">
         <Calendar size={14} />
         <span>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No deadline'}</span>
@@ -238,7 +241,7 @@ const TaskCard = ({
       <select
         value={task.status}
         onChange={(event) => onStatusChange(task.id, event.target.value)}
-        className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800"
+        className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
       >
         {statusOptions.map((option) => (
           <option key={option.value} value={option.value}>
@@ -293,6 +296,7 @@ const TasksPage = () => {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { darkMode } = useTheme();
   const { user } = useAuth();
   const {
@@ -316,6 +320,14 @@ const TasksPage = () => {
     };
     loadMembers();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setEditingTask(null);
+      setIsModalOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const groupedTasks = useMemo(() => {
     return columns.reduce((acc, column) => {
@@ -454,7 +466,7 @@ const TasksPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main
         className={`pt-20 pb-10 transition-all duration-300 ${sidebarOpen ? 'md:pl-72' : 'md:pl-20'} px-4`}
       >
@@ -492,7 +504,7 @@ const TasksPage = () => {
                   name="search"
                   value={filters.search}
                   onChange={handleFilterChange}
-                  className="bg-transparent outline-none"
+                  className="bg-transparent outline-none text-gray-900 placeholder-gray-400 dark:text-gray-100 dark:placeholder-gray-500"
                   placeholder="Search tasks"
                 />
               </div>
@@ -501,7 +513,7 @@ const TasksPage = () => {
                   name="priority"
                   value={filters.priority}
                   onChange={handleFilterChange}
-                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
                 >
                   <option value="">All priorities</option>
                   {priorityOptions.map((option) => (
@@ -514,7 +526,7 @@ const TasksPage = () => {
                   name="status"
                   value={filters.status}
                   onChange={handleFilterChange}
-                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
                 >
                   <option value="">All statuses</option>
                   {statusOptions.map((option) => (
@@ -527,7 +539,7 @@ const TasksPage = () => {
                   name="assignee"
                   value={filters.assignee}
                   onChange={handleFilterChange}
-                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
                 >
                   <option value="">All assignees</option>
                   {members.map((member) => (
@@ -573,7 +585,7 @@ const TasksPage = () => {
                           }`}
                         >
                           {groupedTasks[column.id]?.map((task, index) => (
-                            <Draggable draggableId={task.id} index={index} key={task.id}>
+                            <Draggable draggableId={String(task.id)} index={index} key={task.id}>
                               {(dragProvided) => (
                                 <div
                                   ref={dragProvided.innerRef}
@@ -595,7 +607,7 @@ const TasksPage = () => {
                           {(groupedTasks[column.id]?.length || 0) === 0 && (
                             <div
                               className={`rounded-2xl border-2 border-dashed p-6 text-center text-sm ${
-                                darkMode ? 'border-gray-700 text-gray-500' : 'border-gray-200 text-gray-500'
+                                darkMode ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-500'
                               }`}
                             >
                               No tasks yet
@@ -616,7 +628,7 @@ const TasksPage = () => {
       <Modal
         isOpen={!!commentsTask}
         onClose={closeCommentsModal}
-        title={commentsTask ? `Comments · ${commentsTask.title}` : 'Comments'}
+        title={commentsTask ? `Comments - ${commentsTask.title}` : 'Comments'}
         size="md"
       >
         {commentsLoading ? (
@@ -627,7 +639,7 @@ const TasksPage = () => {
           <div className="space-y-4">
             <div className="max-h-72 overflow-y-auto space-y-4">
               {comments.length === 0 ? (
-                <p className="text-sm text-gray-500">No comments yet.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No comments yet.</p>
               ) : (
                 comments.map((comment) => (
                   <div
@@ -638,7 +650,7 @@ const TasksPage = () => {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-semibold">{comment.author?.name || 'Unknown user'}</p>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {getTimeAgo(new Date(comment.created_at))}
                       </span>
                     </div>
@@ -661,7 +673,7 @@ const TasksPage = () => {
                 onChange={(event) => setNewComment(event.target.value)}
                 rows={3}
                 placeholder="Share an update..."
-                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
               />
               <div className="mt-2 flex justify-end">
                 <Button onClick={handleAddComment} disabled={commentSubmitting || !newComment.trim()}>

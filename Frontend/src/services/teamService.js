@@ -1,60 +1,85 @@
 import api from './api';
 import { mockTeamApi } from './mockData';
+import { unwrapResponse } from './unwrapResponse';
 
 const mockEnabled = import.meta.env.VITE_USE_MOCK === 'true';
+
+const withFallback = async (request, fallback) => {
+  try {
+    const response = await request();
+    return unwrapResponse(response.data);
+  } catch (error) {
+    console.warn('Team API unavailable, using mock data.', error);
+    return fallback();
+  }
+};
 
 export const getTeamMembers = async () => {
   if (mockEnabled) {
     return mockTeamApi.getTeamMembers();
   }
-  const response = await api.get('/team/members');
-  return response.data;
+  return withFallback(
+    () => api.get('/team/members'),
+    () => mockTeamApi.getTeamMembers()
+  );
 };
 
 export const inviteMember = async (inviteData) => {
   if (mockEnabled) {
     return mockTeamApi.inviteMember(inviteData);
   }
-  const response = await api.post('/team/members', inviteData);
-  return response.data;
+  return withFallback(
+    () => api.post('/team/members', inviteData),
+    () => mockTeamApi.inviteMember(inviteData)
+  );
 };
 
 export const updateUserRole = async (userId, role) => {
   if (mockEnabled) {
     return mockTeamApi.updateUserRole(userId, role);
   }
-  const response = await api.patch(`/team/members/${userId}/role`, { role });
-  return response.data;
+  return withFallback(
+    () => api.patch(`/team/members/${userId}/role`, { role }),
+    () => mockTeamApi.updateUserRole(userId, role)
+  );
 };
 
 export const removeTeamMember = async (userId) => {
   if (mockEnabled) {
     return mockTeamApi.removeTeamMember(userId);
   }
-  const response = await api.delete(`/team/members/${userId}`);
-  return response.data;
+  return withFallback(
+    () => api.delete(`/team/members/${userId}`),
+    () => mockTeamApi.removeTeamMember(userId)
+  );
 };
 
 export const getTeamSettings = async () => {
   if (mockEnabled) {
     return mockTeamApi.getTeamSettings();
   }
-  const response = await api.get('/team/settings');
-  return response.data;
+  return withFallback(
+    () => api.get('/team/settings'),
+    () => mockTeamApi.getTeamSettings()
+  );
 };
 
 export const updateTeamSettings = async (settings) => {
   if (mockEnabled) {
     return mockTeamApi.updateTeamSettings(settings);
   }
-  const response = await api.put('/team/settings', settings);
-  return response.data;
+  return withFallback(
+    () => api.put('/team/settings', settings),
+    () => mockTeamApi.updateTeamSettings(settings)
+  );
 };
 
 export const adjustMemberStats = async (userId, payload) => {
   if (mockEnabled) {
     return mockTeamApi.adjustMemberStats(userId, payload);
   }
-  const response = await api.patch(`/team/members/${userId}/stats`, payload);
-  return response.data;
+  return withFallback(
+    () => api.patch(`/team/members/${userId}/stats`, payload),
+    () => mockTeamApi.adjustMemberStats(userId, payload)
+  );
 };

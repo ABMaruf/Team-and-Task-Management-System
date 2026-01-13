@@ -66,7 +66,7 @@ const StreakCard = () => {
     >
       <div className="flex items-start justify-between mb-6">
         <div>
-          <p className="text-sm text-gray-500">Current streak</p>
+          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Current streak</p>
           <div className="flex items-baseline gap-2">
             <span className={`text-4xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
               {summary.current_streak}
@@ -74,7 +74,7 @@ const StreakCard = () => {
             <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>days</span>
           </div>
           <p className={`text-sm mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            Goal: {goal} days · {progressPercent}% complete
+            Goal: {goal} days - {progressPercent}% complete
           </p>
           <div className="mt-2 h-2 rounded-full bg-gray-200 dark:bg-gray-700">
             <div
@@ -96,7 +96,7 @@ const StreakCard = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Flame size={16} className="text-orange-500" />
-            <span className="text-xs text-gray-500">Last completion</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Last completion</span>
           </div>
           <p className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {summary.lastCompletedDate
@@ -107,7 +107,7 @@ const StreakCard = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp size={16} className="text-green-500" />
-            <span className="text-xs text-gray-500">Longest streak</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Longest streak</span>
           </div>
           <p className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {summary.longest_streak} days
@@ -116,7 +116,7 @@ const StreakCard = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Calendar size={16} className="text-blue-500" />
-            <span className="text-xs text-gray-500">Grace period</span>
+            <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Grace period</span>
           </div>
           <p className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {summary.resetIn != null ? `${summary.resetIn} days left` : 'On track'}
@@ -142,7 +142,7 @@ const StreakCard = () => {
               >
                 <span className={darkMode ? 'text-white' : 'text-gray-800'}>{entry.completed}</span>
               </div>
-              <span className="text-gray-500">{dayLabel(entry.date)}</span>
+              <span className={darkMode ? 'text-gray-400' : 'text-gray-500'}>{dayLabel(entry.date)}</span>
             </div>
           ))}
         </div>

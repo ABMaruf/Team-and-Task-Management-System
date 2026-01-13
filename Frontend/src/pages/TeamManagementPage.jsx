@@ -18,6 +18,16 @@ import { useAuth } from '../hooks/useAuth';
 import * as teamService from '../services/teamService';
 
 const inviteDefaults = { name: '', email: '', role: 'member' };
+const settingsDefaults = {
+  streakGoal: 5,
+  resetGracePeriod: 1,
+  productivityWeights: {
+    high: 3,
+    medium: 2,
+    low: 1
+  },
+  allowManualAdjustments: true
+};
 
 const TeamManagementPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -97,9 +107,11 @@ const TeamManagementPage = () => {
   const loadSettings = async () => {
     try {
       const teamSettings = await teamService.getTeamSettings();
-      setSettings(teamSettings);
+      setSettings(teamSettings || settingsDefaults);
     } catch (error) {
       console.error('Failed to load settings', error);
+      setSettings(settingsDefaults);
+      toast.error('Unable to load settings, showing defaults.');
     }
   };
 
@@ -201,7 +213,7 @@ const TeamManagementPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main
         className={`pt-20 pb-16 transition-all duration-300 ${
           sidebarOpen ? 'md:pl-72' : 'md:pl-20'
@@ -221,7 +233,7 @@ const TeamManagementPage = () => {
               <div className="flex items-center gap-3">
                 <Users className="text-indigo-500" />
                 <div>
-                  <p className="text-sm text-gray-500">Total members</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total members</p>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                     {memberStats.total}
                   </p>
@@ -232,7 +244,7 @@ const TeamManagementPage = () => {
               <div className="flex items-center gap-3">
                 <Crown className="text-amber-500" />
                 <div>
-                  <p className="text-sm text-gray-500">Admins</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Admins</p>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                     {memberStats.admins}
                   </p>
@@ -243,7 +255,7 @@ const TeamManagementPage = () => {
               <div className="flex items-center gap-3">
                 <Shield className="text-emerald-500" />
                 <div>
-                  <p className="text-sm text-gray-500">Members</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Members</p>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                     {memberStats.members}
                   </p>
@@ -279,7 +291,7 @@ const TeamManagementPage = () => {
                     >
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">{member.name}</p>
-                        <p className="text-gray-500">{member.email}</p>
+                        <p className="text-gray-500 dark:text-gray-400">{member.email}</p>
                         <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                           <span>Streak: <strong className="text-gray-900 dark:text-white">{member.current_streak ?? 0}</strong> / {member.longest_streak ?? 0}</span>
                           <span>Productivity: <strong className="text-indigo-500">{member.productivity_score ?? 0}</strong></span>
@@ -289,7 +301,7 @@ const TeamManagementPage = () => {
                         <select
                           value={member.role}
                           onChange={(event) => handleRoleChange(member.id, event.target.value)}
-                          className="rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                          className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
                         >
                           <option value="admin">Admin</option>
                           <option value="member">Member</option>
@@ -327,7 +339,7 @@ const TeamManagementPage = () => {
                     name="name"
                     value={inviteForm.name}
                     onChange={handleInviteChange}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
                     placeholder="Avery Collins"
                   />
                 </div>
@@ -338,7 +350,7 @@ const TeamManagementPage = () => {
                     name="email"
                     value={inviteForm.email}
                     onChange={handleInviteChange}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
                     placeholder="avery@example.com"
                   />
                 </div>
@@ -348,7 +360,7 @@ const TeamManagementPage = () => {
                     name="role"
                     value={inviteForm.role}
                     onChange={handleInviteChange}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
                   >
                     <option value="member">Team Member</option>
                     <option value="admin">Administrator</option>
@@ -380,7 +392,7 @@ const TeamManagementPage = () => {
                     min="1"
                     value={settings.streakGoal}
                     onChange={(event) => handleSettingsChange(event, 'streakGoal')}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
@@ -390,7 +402,7 @@ const TeamManagementPage = () => {
                     min="0"
                     value={settings.resetGracePeriod}
                     onChange={(event) => handleSettingsChange(event, 'resetGracePeriod')}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
@@ -400,7 +412,7 @@ const TeamManagementPage = () => {
                     min="1"
                     value={settings.productivityWeights.high}
                     onChange={(event) => handleSettingsChange(event, 'productivityWeights.high')}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
@@ -410,7 +422,7 @@ const TeamManagementPage = () => {
                     min="1"
                     value={settings.productivityWeights.medium}
                     onChange={(event) => handleSettingsChange(event, 'productivityWeights.medium')}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div>
@@ -420,7 +432,7 @@ const TeamManagementPage = () => {
                     min="1"
                     value={settings.productivityWeights.low}
                     onChange={(event) => handleSettingsChange(event, 'productivityWeights.low')}
-                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+                    className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                   />
                 </div>
                 <div className="flex items-center gap-3">
@@ -453,7 +465,7 @@ const TeamManagementPage = () => {
       <Modal
         isOpen={statsModalOpen}
         onClose={closeStatsModal}
-        title={statsTarget ? `Adjust stats · ${statsTarget.name}` : 'Adjust stats'}
+        title={statsTarget ? `Adjust stats - ${statsTarget.name}` : 'Adjust stats'}
         size="sm"
       >
         <form className="space-y-4" onSubmit={handleStatsSubmit}>
@@ -465,7 +477,7 @@ const TeamManagementPage = () => {
               name="current_streak"
               value={statsForm.current_streak}
               onChange={handleStatsChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
           <div>
@@ -476,7 +488,7 @@ const TeamManagementPage = () => {
               name="longest_streak"
               value={statsForm.longest_streak}
               onChange={handleStatsChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
           <div>
@@ -487,7 +499,7 @@ const TeamManagementPage = () => {
               name="productivity_score"
               value={statsForm.productivity_score}
               onChange={handleStatsChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
           <div className="flex justify-end gap-3">

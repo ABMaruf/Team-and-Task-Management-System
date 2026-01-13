@@ -1,4 +1,5 @@
 import pool from '../config/db.js';
+import { calculateUserStreak } from '../utils/streakCalculator.js';
 
 // @desc    Get all tasks with filters
 // @route   GET /api/tasks
@@ -170,11 +171,31 @@ export const updateTask = async (req, res) => {
       });
     }
 
+    const existingTask = existingTasks[0];
+    const nextTitle = title ?? existingTask.title;
+    const nextDescription = description ?? existingTask.description ?? null;
+    const nextProjectId = project_id ?? existingTask.project_id ?? null;
+    const nextAssignedTo = assigned_to ?? existingTask.assigned_to ?? null;
+    const nextPriority = priority ?? existingTask.priority ?? 'medium';
+    const nextStatus = status ?? existingTask.status ?? 'todo';
+    const nextDeadline = deadline ?? existingTask.deadline ?? null;
+    const nextEstimatedHours = estimated_hours ?? existingTask.estimated_hours ?? null;
+
     await pool.execute(
       `UPDATE tasks 
        SET title = ?, description = ?, project_id = ?, assigned_to = ?, priority = ?, status = ?, deadline = ?, estimated_hours = ?
        WHERE id = ?`,
-      [title, description, project_id, assigned_to, priority, status, deadline, estimated_hours, req.params.id]
+      [
+        nextTitle,
+        nextDescription,
+        nextProjectId,
+        nextAssignedTo,
+        nextPriority,
+        nextStatus,
+        nextDeadline,
+        nextEstimatedHours,
+        req.params.id
+      ]
     );
 
     // Get updated task
@@ -241,20 +262,38 @@ export const deleteTask = async (req, res) => {
 export const updateTaskStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const completedAt = status === 'completed' ? new Date() : null;
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Status is required'
+      });
+    }
 
-    await pool.execute(
-      'UPDATE tasks SET status = ?, completed_at = ? WHERE id = ?',
-      [status, completedAt, req.params.id]
-    );
+    if (status === 'completed') {
+      await pool.execute(
+        'UPDATE tasks SET status = ?, completed_at = ? WHERE id = ?',
+        [status, new Date(), req.params.id]
+      );
+    } else {
+      await pool.execute(
+        'UPDATE tasks SET status = ? WHERE id = ?',
+        [status, req.params.id]
+      );
+    }
 
     // Get updated task
     const [tasks] = await pool.execute('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
 
     // If task completed, calculate streak
-    if (status === 'completed' && tasks[0].assigned_to) {
-      // Import and call streak calculation
-      // This will be handled by streakController
+    if (status === 'completed') {
+      const streakUserId = tasks[0]?.assigned_to ?? tasks[0]?.created_by ?? req.user?.id;
+      if (streakUserId) {
+        try {
+          await calculateUserStreak(streakUserId);
+        } catch (error) {
+          console.error('Streak calculation failed after task completion:', error);
+        }
+      }
     }
 
     res.json({

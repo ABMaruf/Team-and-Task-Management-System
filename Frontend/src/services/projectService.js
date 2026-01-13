@@ -1,5 +1,6 @@
 import api from './api';
 import { mockProjectApi } from './mockData';
+import { unwrapResponse } from './unwrapResponse';
 
 const mockEnabled = import.meta.env.VITE_USE_MOCK === 'true';
 
@@ -9,7 +10,7 @@ export const getProjects = async () => {
     return mockProjectApi.getProjects();
   }
   const response = await api.get('/projects');
-  return response.data;
+  return unwrapResponse(response.data);
 };
 
 // Get project by ID
@@ -18,7 +19,7 @@ export const getProjectById = async (projectId) => {
     return mockProjectApi.getProjectById(projectId);
   }
   const response = await api.get(`/projects/${projectId}`);
-  return response.data;
+  return unwrapResponse(response.data);
 };
 
 // Create new project
@@ -27,7 +28,7 @@ export const createProject = async (projectData) => {
     return mockProjectApi.createProject(projectData);
   }
   const response = await api.post('/projects', projectData);
-  return response.data;
+  return unwrapResponse(response.data);
 };
 
 // Update project
@@ -36,7 +37,7 @@ export const updateProject = async (projectId, projectData) => {
     return mockProjectApi.updateProject(projectId, projectData);
   }
   const response = await api.put(`/projects/${projectId}`, projectData);
-  return response.data;
+  return unwrapResponse(response.data);
 };
 
 // Delete project
@@ -45,7 +46,7 @@ export const deleteProject = async (projectId) => {
     return mockProjectApi.deleteProject(projectId);
   }
   const response = await api.delete(`/projects/${projectId}`);
-  return response.data;
+  return unwrapResponse(response.data);
 };
 
 // Get tasks in project
@@ -54,5 +55,5 @@ export const getProjectTasks = async (projectId) => {
     return mockProjectApi.getProjectTasks(projectId);
   }
   const response = await api.get(`/projects/${projectId}/tasks`);
-  return response.data;
+  return unwrapResponse(response.data);
 };

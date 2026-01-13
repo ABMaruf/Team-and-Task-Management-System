@@ -21,7 +21,7 @@ const projectValidation = [
 
 router.get('/', protect, getProjects);
 router.get('/:id', protect, getProjectById);
-router.post('/', protect, admin, projectValidation, validate, createProject);
+router.post('/', protect, projectValidation, validate, createProject);
 router.put('/:id', protect, admin, projectValidation, validate, updateProject);
 router.delete('/:id', protect, admin, deleteProject);
 router.get('/:id/tasks', protect, getProjectTasks);

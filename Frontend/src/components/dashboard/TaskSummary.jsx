@@ -3,7 +3,7 @@ import { CheckSquare, Clock, AlertCircle, TrendingUp } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import * as taskService from '../../services/taskService';
 
-const TaskSummary = () => {
+const TaskSummary = ({ stats }) => {
   const { darkMode } = useTheme();
   const [summary, setSummary] = useState({
     total: 0,
@@ -13,8 +13,20 @@ const TaskSummary = () => {
   });
 
   useEffect(() => {
+    if (stats) {
+      const completed = Number(stats.completed || 0);
+      const inProgress = Number(stats.inProgress || 0);
+      const pending = Number(stats.pending || 0);
+      setSummary({
+        total: completed + inProgress + pending,
+        completed,
+        inProgress,
+        pending
+      });
+      return;
+    }
     fetchTaskSummary();
-  }, []);
+  }, [stats]);
 
   const fetchTaskSummary = async () => {
     try {
@@ -34,32 +46,33 @@ const TaskSummary = () => {
     }
   };
 
+  const productivityValue = stats?.productivity != null ? stats.productivity : '0';
   const cards = [
     {
-      icon: <CheckSquare className="text-green-500" size={24} />,
+      icon: <CheckSquare className="text-white" size={24} />,
       title: 'Completed',
       value: summary.completed,
       bgGradient: 'from-green-500 to-emerald-500',
       trend: '+12% from last week'
     },
     {
-      icon: <Clock className="text-blue-500" size={24} />,
+      icon: <Clock className="text-white" size={24} />,
       title: 'In Progress',
       value: summary.inProgress,
       bgGradient: 'from-blue-500 to-indigo-500',
       trend: `${summary.inProgress} active tasks`
     },
     {
-      icon: <AlertCircle className="text-orange-500" size={24} />,
+      icon: <AlertCircle className="text-white" size={24} />,
       title: 'Pending',
       value: summary.pending,
       bgGradient: 'from-orange-500 to-red-500',
       trend: `${summary.pending} waiting`
     },
     {
-      icon: <TrendingUp className="text-purple-500" size={24} />,
+      icon: <TrendingUp className="text-white" size={24} />,
       title: 'Productivity',
-      value: '850',
+      value: productivityValue,
       bgGradient: 'from-purple-500 to-pink-500',
       trend: '+15% this month'
     }

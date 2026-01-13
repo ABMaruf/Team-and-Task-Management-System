@@ -18,7 +18,7 @@ const router = express.Router();
 const taskValidation = [
   body('title').trim().notEmpty().withMessage('Title is required'),
   body('priority').optional().isIn(['low', 'medium', 'high', 'urgent']).withMessage('Invalid priority'),
-  body('status').optional().isIn(['todo', 'in_progress', 'completed']).withMessage('Invalid status')
+  body('status').optional().isIn(['todo', 'in_progress', 'review', 'completed']).withMessage('Invalid status')
 ];
 
 router.get('/', protect, getTasks);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import * as dashboardService from '../../services/dashboardService';
@@ -14,6 +15,7 @@ import Loader from '../common/Loader';
 const Dashboard = () => {
   const { user } = useAuth();
   const { darkMode } = useTheme();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,13 +49,13 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-            Welcome back, {user?.name?.split(' ')[0]}! 👋
+            Welcome back, {user?.name?.split(' ')[0]}!
           </h1>
           <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1`}>
             Here's what's happening with your tasks today.
           </p>
         </div>
-        <Button icon={<Plus size={20} />}>
+        <Button icon={<Plus size={20} />} onClick={() => navigate('/tasks?new=1')}>
           New Task
         </Button>
       </div>

@@ -25,10 +25,10 @@ export const calculateUserStreak = async (userId) => {
         ELSE 10
       END) as points
       FROM tasks
-      WHERE assigned_to = ? 
+      WHERE (assigned_to = ? OR (assigned_to IS NULL AND created_by = ?))
       AND status = 'completed' 
       AND DATE(completed_at) = ?`,
-      [userId, today]
+      [userId, userId, today]
     );
 
     const tasksCompletedToday = tasksToday[0].count || 0;
@@ -77,6 +77,15 @@ export const calculateUserStreak = async (userId) => {
       }
 
       // Update user's streak
+      const [existingHistory] = await pool.execute(
+        `SELECT tasks_completed, productivity_points
+         FROM streak_history
+         WHERE user_id = ? AND date = ?`,
+        [userId, today]
+      );
+      const previousPoints = existingHistory[0]?.productivity_points ?? 0;
+      const deltaPoints = productivityPoints - previousPoints;
+
       await pool.execute(
         `UPDATE users 
          SET current_streak = ?, 
@@ -84,7 +93,7 @@ export const calculateUserStreak = async (userId) => {
              last_task_date = ?,
              productivity_score = productivity_score + ?
          WHERE id = ?`,
-        [newStreak, newLongestStreak, today, productivityPoints, userId]
+        [newStreak, newLongestStreak, today, deltaPoints, userId]
       );
 
       // Save to streak history
@@ -92,9 +101,9 @@ export const calculateUserStreak = async (userId) => {
         `INSERT INTO streak_history (user_id, date, tasks_completed, productivity_points)
          VALUES (?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE 
-         tasks_completed = tasks_completed + ?,
-         productivity_points = productivity_points + ?`,
-        [userId, today, tasksCompletedToday, productivityPoints, tasksCompletedToday, productivityPoints]
+         tasks_completed = VALUES(tasks_completed),
+         productivity_points = VALUES(productivity_points)`,
+        [userId, today, tasksCompletedToday, productivityPoints]
       );
     }
 

@@ -4,11 +4,17 @@ import { LayoutDashboard, CheckSquare, Folder, UserCircle, Shield, CalendarDays 
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { darkMode } = useTheme();
   const { isAdmin } = useAuth();
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
 
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/dashboard' },
@@ -27,30 +33,43 @@ const Sidebar = ({ isOpen }) => {
   }
 
   return (
-    <aside className={`fixed left-0 top-16 h-[calc(100vh-4rem)] ${
-      isOpen ? 'w-64' : 'w-0'
-    } transition-all duration-300 overflow-hidden ${
-      darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-    } border-r z-40`}>
-      <div className="p-4 space-y-2">
-        {menuItems.map((item, index) => (
-          <button
-            key={index}
-            onClick={() => navigate(item.path)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-              location.pathname === item.path
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
-                : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            {item.icon}
-            <span className="font-medium">{item.label}</span>
-          </button>
-        ))}
-      </div>
-    </aside>
+    <>
+      {isOpen ? (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={handleClose}
+          className="fixed inset-0 z-30 cursor-pointer bg-transparent"
+        />
+      ) : null}
+      <aside className={`fixed left-0 top-16 h-[calc(100vh-4rem)] ${
+        isOpen ? 'w-64' : 'w-0'
+      } transition-all duration-300 overflow-hidden ${
+        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      } border-r z-40`}>
+        <div className="p-4 space-y-2">
+          {menuItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                navigate(item.path);
+                handleClose();
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                location.pathname === item.path
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
+                  : darkMode
+                    ? 'text-gray-300 hover:bg-gray-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {item.icon}
+              <span className="font-medium">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </aside>
+    </>
   );
 };
 

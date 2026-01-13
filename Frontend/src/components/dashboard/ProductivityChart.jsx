@@ -74,7 +74,7 @@ const ProductivityChart = () => {
 
       <div className="grid gap-4 md:grid-cols-3 mb-6">
         <div className={`${darkMode ? 'bg-gray-900/40' : 'bg-gray-100'} rounded-2xl p-4`}>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className={`flex items-center gap-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
             <TrendingUp size={16} className="text-indigo-500" />
             Productivity score
           </div>
@@ -84,24 +84,24 @@ const ProductivityChart = () => {
           <p className="text-xs text-green-500">{trend >= 0 ? '+' : ''}{trend}% vs first day</p>
         </div>
         <div className={`${darkMode ? 'bg-gray-900/40' : 'bg-gray-100'} rounded-2xl p-4`}>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className={`flex items-center gap-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
             <CheckCircle size={16} className="text-emerald-500" />
             Tasks completed
           </div>
           <p className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {summary.completed}
           </p>
-          <p className="text-xs text-gray-500">within selected range</p>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>within selected range</p>
         </div>
         <div className={`${darkMode ? 'bg-gray-900/40' : 'bg-gray-100'} rounded-2xl p-4`}>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className={`flex items-center gap-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
             <Clock size={16} className="text-amber-500" />
             Avg completion time
           </div>
           <p className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             {summary.averageCompletionHours}h
           </p>
-          <p className="text-xs text-gray-500">from start to done</p>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>from start to done</p>
         </div>
       </div>
 
@@ -136,7 +136,7 @@ const ProductivityChart = () => {
           <p className={`text-sm font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
             Streak heatmap
           </p>
-          <p className="text-xs text-gray-500">Goal hits over last two weeks</p>
+          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Goal hits over last two weeks</p>
         </div>
         <div className="overflow-x-auto">
           <div className="min-w-[560px] grid grid-cols-14 gap-1">
