@@ -57,3 +57,57 @@ export const getProjectTasks = async (projectId) => {
   const response = await api.get(`/projects/${projectId}/tasks`);
   return unwrapResponse(response.data);
 };
+
+// Create project invite
+export const createProjectInvite = async (projectId, payload) => {
+  const response = await api.post(`/projects/${projectId}/invites`, payload);
+  return unwrapResponse(response.data);
+};
+
+// Get invite info
+export const getProjectInviteInfo = async (token) => {
+  const response = await api.get(`/projects/invites/info?token=${encodeURIComponent(token)}`);
+  return unwrapResponse(response.data);
+};
+
+// Accept invite
+export const acceptProjectInvite = async (token) => {
+  const response = await api.post('/projects/invites/accept', { token });
+  return unwrapResponse(response.data);
+};
+
+// Get project members
+export const getProjectMembers = async (projectId) => {
+  const response = await api.get(`/projects/${projectId}/members`);
+  return unwrapResponse(response.data);
+};
+
+// Add project member (owner only)
+export const addProjectMember = async (projectId, payload) => {
+  const response = await api.post(`/projects/${projectId}/members`, payload);
+  return unwrapResponse(response.data);
+};
+
+// Update member role (owner only)
+export const updateProjectMemberRole = async (projectId, userId, payload) => {
+  const response = await api.patch(`/projects/${projectId}/members/${userId}`, payload);
+  return unwrapResponse(response.data);
+};
+
+// Remove project member (owner/admin)
+export const removeProjectMember = async (projectId, userId) => {
+  const response = await api.delete(`/projects/${projectId}/members/${userId}`);
+  return unwrapResponse(response.data);
+};
+
+// Get project chat messages
+export const getProjectMessages = async (projectId) => {
+  const response = await api.get(`/projects/${projectId}/messages`);
+  return unwrapResponse(response.data);
+};
+
+// Add project chat message
+export const addProjectMessage = async (projectId, payload) => {
+  const response = await api.post(`/projects/${projectId}/messages`, payload);
+  return unwrapResponse(response.data);
+};

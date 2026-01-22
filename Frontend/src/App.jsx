@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './context/ThemeContext';
 
@@ -14,6 +14,8 @@ import TeamManagementPage from './pages/TeamManagementPage';
 import CalendarPage from './pages/CalendarPage';
 import NotFoundPage from './pages/NotFoundPage';
 import GithubCallbackPage from './pages/GithubCallbackPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import InviteAcceptPage from './pages/InviteAcceptPage';
 
 // Components
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -22,6 +24,13 @@ import Loader from './components/common/Loader';
 function App() {
   const { user, loading } = useAuth();
   const { darkMode } = useTheme();
+  const location = useLocation();
+
+  const getReturnTo = () => {
+    const params = new URLSearchParams(location.search);
+    const target = params.get('returnTo');
+    return target && target.startsWith('/') ? target : null;
+  };
 
   if (loading) {
     return <Loader fullScreen />;
@@ -33,7 +42,7 @@ function App() {
         {/* Public Routes */}
         <Route 
           path="/login" 
-          element={user ? <Navigate to="/dashboard" /> : <LoginPage />} 
+          element={user ? <Navigate to={getReturnTo() || '/dashboard'} /> : <LoginPage />} 
         />
         <Route 
           path="/register" 
@@ -43,6 +52,8 @@ function App() {
           path="/oauth/github"
           element={user ? <Navigate to="/dashboard" /> : <GithubCallbackPage />}
         />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/invites/accept" element={<InviteAcceptPage />} />
 
         {/* Protected Routes */}
         <Route 

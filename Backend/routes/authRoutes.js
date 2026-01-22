@@ -7,7 +7,9 @@ import {
   googleAuth,
   githubAuth,
   githubExchange,
-  githubCallback
+  githubCallback,
+  verifyEmail,
+  resendVerificationEmail
 } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { body } from 'express-validator';
@@ -43,6 +45,8 @@ router.post('/google', googleAuth);
 router.get('/github', githubAuth);
 router.get('/github/callback', githubCallback);
 router.post('/github/exchange', githubExchange);
+router.get('/verify-email', verifyEmail);
+router.post('/resend-verification', resendVerificationEmail);
 router.get('/me', protect, getCurrentUser);
 router.post('/logout', protect, logout);
 

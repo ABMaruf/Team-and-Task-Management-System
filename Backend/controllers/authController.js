@@ -4,10 +4,19 @@ import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import pool from '../config/db.js';
 import { isAllowedEmailDomain } from '../utils/emailValidation.js';
+import { sendVerificationEmail } from '../utils/emailService.js';
+import { getClientUrls } from '../utils/clientUrls.js';
 
 const googleClient = process.env.GOOGLE_CLIENT_ID
   ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
   : null;
+
+const createEmailVerificationToken = () => {
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  return { token, tokenHash, expiresAt };
+};
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -50,9 +59,18 @@ export const register = async (req, res) => {
 
     // Create user
     const [result] = await pool.execute(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-      [name, normalizedEmail, hashedPassword, role || 'member']
+      'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, ?)',
+      [name, normalizedEmail, hashedPassword, role || 'member', 0]
     );
+
+    const { token, tokenHash, expiresAt } = createEmailVerificationToken();
+    await pool.execute(
+      'UPDATE users SET email_verification_token = ?, email_verification_expires = ? WHERE id = ?',
+      [tokenHash, expiresAt, result.insertId]
+    );
+
+    const verifyLinks = getClientUrls(`/verify-email?token=${token}`);
+    await sendVerificationEmail(normalizedEmail, name, verifyLinks);
 
     // Get created user
     const [users] = await pool.execute(
@@ -62,7 +80,7 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'Verification email sent. Please check your inbox.',
       user: users[0]
     });
   } catch (error) {
@@ -96,6 +114,13 @@ export const login = async (req, res) => {
     }
 
     const user = users[0];
+
+    if (!user.email_verified) {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email before logging in'
+      });
+    }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -134,7 +159,7 @@ export const login = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
   try {
     const [users] = await pool.execute(
-      'SELECT id, name, email, role, profile_picture, current_streak, longest_streak, productivity_score, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, role, profile_picture, current_streak, longest_streak, productivity_score, email_verified, created_at FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -222,8 +247,8 @@ export const googleAuth = async (req, res) => {
       const hashedPassword = await bcrypt.hash(randomPassword, salt);
 
       const [result] = await pool.execute(
-        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-        [name, email, hashedPassword, 'member']
+        'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, ?)',
+        [name, email, hashedPassword, 'member', 1]
       );
 
       const [createdUsers] = await pool.execute(
@@ -231,6 +256,9 @@ export const googleAuth = async (req, res) => {
         [result.insertId]
       );
       user = createdUsers[0];
+    } else if (!user.email_verified) {
+      await pool.execute('UPDATE users SET email_verified = 1 WHERE id = ?', [user.id]);
+      user.email_verified = 1;
     }
 
     const token = generateToken(user.id);
@@ -384,8 +412,8 @@ export const githubExchange = async (req, res) => {
       const hashedPassword = await bcrypt.hash(randomPassword, salt);
 
       const [result] = await pool.execute(
-        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-        [githubUser.name || githubUser.login || 'GitHub User', email, hashedPassword, 'member']
+        'INSERT INTO users (name, email, password, role, email_verified) VALUES (?, ?, ?, ?, ?)',
+        [githubUser.name || githubUser.login || 'GitHub User', email, hashedPassword, 'member', 1]
       );
 
       const [createdUsers] = await pool.execute(
@@ -393,6 +421,9 @@ export const githubExchange = async (req, res) => {
         [result.insertId]
       );
       user = createdUsers[0];
+    } else if (!user.email_verified) {
+      await pool.execute('UPDATE users SET email_verified = 1 WHERE id = ?', [user.id]);
+      user.email_verified = 1;
     }
 
     const token = generateToken(user.id);
@@ -429,4 +460,104 @@ export const githubCallback = (req, res) => {
     target.searchParams.set('error_description', req.query.error_description);
   }
   return res.redirect(target.toString());
+};
+
+// @desc    Verify email address
+// @route   GET /api/auth/verify-email
+// @access  Public
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token is required'
+      });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const [users] = await pool.execute(
+      'SELECT id FROM users WHERE email_verification_token = ? AND email_verification_expires > NOW()',
+      [tokenHash]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification link is invalid or expired'
+      });
+    }
+
+    await pool.execute(
+      'UPDATE users SET email_verified = 1, email_verification_token = NULL, email_verification_expires = NULL WHERE id = ?',
+      [users[0].id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully'
+    });
+  } catch (error) {
+    console.error('Verify email error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error verifying email'
+    });
+  }
+};
+
+// @desc    Resend verification email
+// @route   POST /api/auth/resend-verification
+// @access  Public
+export const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const normalizedEmail = email?.toLowerCase().trim();
+
+    if (!normalizedEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required'
+      });
+    }
+
+    const [users] = await pool.execute(
+      'SELECT id, name, email_verified FROM users WHERE email = ?',
+      [normalizedEmail]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (users[0].email_verified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified'
+      });
+    }
+
+    const { token, tokenHash, expiresAt } = createEmailVerificationToken();
+    await pool.execute(
+      'UPDATE users SET email_verification_token = ?, email_verification_expires = ? WHERE id = ?',
+      [tokenHash, expiresAt, users[0].id]
+    );
+
+    const verifyLinks = getClientUrls(`/verify-email?token=${token}`);
+    await sendVerificationEmail(normalizedEmail, users[0].name, verifyLinks);
+
+    res.json({
+      success: true,
+      message: 'Verification email resent'
+    });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resending verification email'
+    });
+  }
 };

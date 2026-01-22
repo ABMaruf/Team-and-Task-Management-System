@@ -1,10 +1,19 @@
 import pool from '../config/db.js';
+import { getTaskAccess } from '../utils/projectAccess.js';
 
 // @desc    Get task comments
 // @route   GET /api/comments/task/:taskId
 // @access  Private
 export const getTaskComments = async (req, res) => {
   try {
+    const access = await getTaskAccess(req.params.taskId, req.user.id);
+    if (!access?.isMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view comments'
+      });
+    }
+
     const [comments] = await pool.execute(
       `SELECT c.*, u.name as user_name, u.profile_picture
        FROM comments c
@@ -36,13 +45,18 @@ export const addComment = async (req, res) => {
     const { comment } = req.body;
     const taskId = req.params.taskId;
 
-    // Check if task exists
-    const [tasks] = await pool.execute('SELECT * FROM tasks WHERE id = ?', [taskId]);
-    
-    if (tasks.length === 0) {
+    const access = await getTaskAccess(taskId, req.user.id);
+    if (!access?.task) {
       return res.status(404).json({
         success: false,
         message: 'Task not found'
+      });
+    }
+
+    if (!access.isMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to comment on this task'
       });
     }
 
@@ -67,7 +81,7 @@ export const addComment = async (req, res) => {
     );
 
     // Notify task owner/assignee
-    const task = tasks[0];
+    const task = access.task;
     if (task.assigned_to && task.assigned_to !== req.user.id) {
       await pool.execute(
         'INSERT INTO notifications (user_id, task_id, type, message) VALUES (?, ?, ?, ?)',
@@ -106,6 +120,14 @@ export const updateComment = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Comment not found or unauthorized'
+      });
+    }
+
+    const access = await getTaskAccess(comments[0].task_id, req.user.id);
+    if (!access?.isMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this comment'
       });
     }
 
@@ -154,7 +176,15 @@ export const deleteComment = async (req, res) => {
       });
     }
 
-    if (comments[0].user_id !== req.user.id && req.user.role !== 'admin') {
+    const access = await getTaskAccess(comments[0].task_id, req.user.id);
+    if (!access?.isMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to delete this comment'
+      });
+    }
+
+    if (comments[0].user_id !== req.user.id && !access.isAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this comment'

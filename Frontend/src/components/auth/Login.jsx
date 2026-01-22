@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, CheckSquare } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import GoogleAuthButton from './GoogleAuthButton';
@@ -8,6 +8,7 @@ import Button from '../common/Button';
 import Loader from '../common/Loader';
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -17,6 +18,13 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const githubAuthUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/github`;
+
+  useEffect(() => {
+    const returnTo = searchParams.get('returnTo');
+    if (returnTo && returnTo.startsWith('/')) {
+      sessionStorage.setItem('post_login_redirect', returnTo);
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -23,7 +23,11 @@ const mapTask = (task) => {
     assignee: task.assignee ?? (task.assignee_name ? { name: task.assignee_name } : null),
     dueDate: task.dueDate ?? task.deadline ?? null,
     projectId: task.projectId ?? task.project_id ?? null,
-    project: task.project ?? (task.project_name ? { name: task.project_name } : null)
+    project: task.project ?? (task.project_name ? { name: task.project_name } : null),
+    memberRole: task.memberRole ?? task.member_role ?? null,
+    createdBy: task.createdBy ?? task.created_by ?? null,
+    canEdit: task.canEdit ?? task.can_edit ?? false,
+    canUpdateStatus: task.canUpdateStatus ?? task.can_update_status ?? false
   };
 };
 

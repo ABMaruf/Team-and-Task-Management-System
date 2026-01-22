@@ -204,9 +204,15 @@ export const getRecentActivity = async (req, res) => {
        FROM activity_logs al
        JOIN users u ON al.user_id = u.id
        JOIN tasks t ON al.task_id = t.id
+       LEFT JOIN project_members pm
+         ON pm.project_id = t.project_id AND pm.user_id = ?
+       WHERE (
+         (t.project_id IS NOT NULL AND pm.user_id IS NOT NULL)
+         OR (t.project_id IS NULL AND (t.assigned_to = ? OR t.created_by = ?))
+       )
        ORDER BY al.created_at DESC
        LIMIT ?`,
-      [parseInt(limit)]
+      [req.user.id, req.user.id, req.user.id, parseInt(limit)]
     );
 
     res.json({

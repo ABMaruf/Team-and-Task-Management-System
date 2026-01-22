@@ -171,7 +171,13 @@ export const AuthProvider = ({ children }) => {
       }
       setUser(response.user);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      const redirectTarget = sessionStorage.getItem('post_login_redirect');
+      if (redirectTarget && redirectTarget.startsWith('/')) {
+        sessionStorage.removeItem('post_login_redirect');
+        navigate(redirectTarget);
+      } else {
+        navigate('/dashboard');
+      }
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
@@ -189,7 +195,13 @@ export const AuthProvider = ({ children }) => {
       }
       setUser(response.user);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      const redirectTarget = sessionStorage.getItem('post_login_redirect');
+      if (redirectTarget && redirectTarget.startsWith('/')) {
+        sessionStorage.removeItem('post_login_redirect');
+        navigate(redirectTarget);
+      } else {
+        navigate('/dashboard');
+      }
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Google sign-in failed';
@@ -207,7 +219,13 @@ export const AuthProvider = ({ children }) => {
       }
       setUser(response.user);
       toast.success('Login successful!');
-      navigate('/dashboard');
+      const redirectTarget = sessionStorage.getItem('post_login_redirect');
+      if (redirectTarget && redirectTarget.startsWith('/')) {
+        sessionStorage.removeItem('post_login_redirect');
+        navigate(redirectTarget);
+      } else {
+        navigate('/dashboard');
+      }
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'GitHub sign-in failed';
@@ -221,7 +239,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.register(userData);
       
-      toast.success('Registration successful! Please login.');
+      toast.success(response?.message || 'Verification email sent. Please check your inbox.');
       navigate('/login');
       
       return { success: true };

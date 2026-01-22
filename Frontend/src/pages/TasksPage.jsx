@@ -21,9 +21,11 @@ import { useTasks } from '../hooks/useTasks';
 import { useTheme } from '../context/ThemeContext';
 import * as userService from '../services/userService';
 import * as commentService from '../services/commentService';
+import * as projectService from '../services/projectService';
 import { useAuth } from '../hooks/useAuth';
 import { getTimeAgo } from '../utils/helpers';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { toast } from 'react-toastify';
 
 const columns = [
   { id: 'todo', title: 'To Do', accent: 'from-slate-200 to-slate-100' },
@@ -54,6 +56,7 @@ const priorityBadge = {
 const emptyTaskState = {
   title: '',
   description: '',
+  projectId: '',
   priority: 'medium',
   status: 'todo',
   dueDate: '',
@@ -67,27 +70,46 @@ const formatInputDate = (value) => {
   return date.toISOString().split('T')[0];
 };
 
-const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading }) => {
+const TaskModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  members = [],
+  projects = [],
+  initialData,
+  loading,
+  defaultProjectId,
+  onProjectChange,
+  canEditProject = true,
+  canEditAssignee = true,
+  canEditStatus = true
+}) => {
   const [formState, setFormState] = useState(emptyTaskState);
 
   useEffect(() => {
+    const projectId = initialData?.projectId ?? defaultProjectId ?? '';
     if (initialData) {
       setFormState({
         title: initialData.title || '',
         description: initialData.description || '',
+        projectId,
         priority: initialData.priority || 'medium',
         status: initialData.status || 'todo',
         assigneeId: initialData.assigneeId || initialData.assignee?.id || '',
         dueDate: formatInputDate(initialData.dueDate)
       });
     } else {
-      setFormState(emptyTaskState);
+      setFormState({ ...emptyTaskState, projectId });
     }
-  }, [initialData, isOpen]);
+    onProjectChange?.(projectId);
+  }, [defaultProjectId, initialData, isOpen, onProjectChange]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
+    if (name === 'projectId') {
+      onProjectChange?.(value);
+    }
   };
 
   const handleSubmit = (event) => {
@@ -112,17 +134,18 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
             />
           </div>
           <div>
-            <label className="text-sm text-gray-500 dark:text-gray-400">Assignee</label>
+            <label className="text-sm text-gray-500 dark:text-gray-400">Project</label>
             <select
-              name="assigneeId"
-              value={formState.assigneeId}
+              name="projectId"
+              value={formState.projectId}
               onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
+              disabled={!canEditProject}
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
             >
-              <option value="">Unassigned</option>
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
+              <option value="">Personal</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
                 </option>
               ))}
             </select>
@@ -142,6 +165,23 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <label className="text-sm text-gray-500 dark:text-gray-400">Assignee</label>
+            <select
+              name="assigneeId"
+              value={formState.assigneeId}
+              onChange={handleChange}
+              disabled={!canEditAssignee}
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
+            >
+              <option value="">Unassigned</option>
+              {members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="text-sm text-gray-500 dark:text-gray-400">Priority</label>
             <select
@@ -163,7 +203,8 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
               name="status"
               value={formState.status}
               onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
+              disabled={!canEditStatus}
+              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -172,16 +213,16 @@ const TaskModal = ({ isOpen, onClose, onSubmit, members, initialData, loading })
               ))}
             </select>
           </div>
-          <div>
-            <label className="text-sm text-gray-500 dark:text-gray-400">Due date</label>
-            <input
-              type="date"
-              name="dueDate"
-              value={formState.dueDate}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark] date-input"
-            />
-          </div>
+        </div>
+        <div>
+          <label className="text-sm text-gray-500 dark:text-gray-400">Due date</label>
+          <input
+            type="date"
+            name="dueDate"
+            value={formState.dueDate}
+            onChange={handleChange}
+            className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark] date-input"
+          />
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
@@ -203,7 +244,9 @@ const TaskCard = ({
   onEdit,
   onDelete,
   onStatusChange,
-  onComments
+  onComments,
+  canEdit,
+  canDelete
 }) => (
   <div
     className={`rounded-2xl border p-4 transition-all hover:-translate-y-1 hover:shadow-lg ${
@@ -214,6 +257,11 @@ const TaskCard = ({
       <div>
         <p className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{task.title}</p>
         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{task.description || 'No description'}</p>
+        {task.project?.name ? (
+          <p className={`mt-1 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            Project: {task.project.name}
+          </p>
+        ) : null}
       </div>
       <span
         className={`text-xs px-3 py-1 rounded-full font-medium ${
@@ -241,7 +289,8 @@ const TaskCard = ({
       <select
         value={task.status}
         onChange={(event) => onStatusChange(task.id, event.target.value)}
-        className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
+        disabled={!task.canUpdateStatus}
+        className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:[color-scheme:dark]"
       >
         {statusOptions.map((option) => (
           <option key={option.value} value={option.value}>
@@ -255,6 +304,7 @@ const TaskCard = ({
           variant="ghost"
           icon={<Pencil size={14} />}
           onClick={() => onEdit(task)}
+          disabled={!canEdit}
         >
           Edit
         </Button>
@@ -263,6 +313,7 @@ const TaskCard = ({
           variant="ghost"
           icon={<Trash2 size={14} />}
           onClick={() => onDelete(task)}
+          disabled={!canDelete}
         >
           Delete
         </Button>
@@ -283,12 +334,18 @@ const TasksPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  const [members, setMembers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [filterProjectMembers, setFilterProjectMembers] = useState([]);
+  const [modalProjectMembers, setModalProjectMembers] = useState([]);
+  const [modalProjectId, setModalProjectId] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
   const [filters, setFilters] = useState({
     priority: '',
     status: '',
     assignee: '',
+    project: '',
     search: ''
   });
   const [commentsTask, setCommentsTask] = useState(null);
@@ -310,15 +367,30 @@ const TasksPage = () => {
   } = useTasks(filters);
 
   useEffect(() => {
-    const loadMembers = async () => {
+    const loadUsers = async () => {
       try {
         const data = await userService.getUsers();
-        setMembers(data);
+        setAllUsers(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Unable to load users', error);
       }
     };
-    loadMembers();
+    loadUsers();
+  }, []);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        setProjectsLoading(true);
+        const data = await projectService.getProjects();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Unable to load projects', error);
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+    loadProjects();
   }, []);
 
   useEffect(() => {
@@ -329,6 +401,38 @@ const TasksPage = () => {
     }
   }, [searchParams, setSearchParams]);
 
+  useEffect(() => {
+    const loadFilterMembers = async () => {
+      if (!filters.project) {
+        setFilterProjectMembers([]);
+        return;
+      }
+      try {
+        const data = await projectService.getProjectMembers(filters.project);
+        setFilterProjectMembers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Unable to load project members', error);
+      }
+    };
+    loadFilterMembers();
+  }, [filters.project]);
+
+  useEffect(() => {
+    const loadModalMembers = async () => {
+      if (!modalProjectId) {
+        setModalProjectMembers([]);
+        return;
+      }
+      try {
+        const data = await projectService.getProjectMembers(modalProjectId);
+        setModalProjectMembers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Unable to load project members', error);
+      }
+    };
+    loadModalMembers();
+  }, [modalProjectId]);
+
   const groupedTasks = useMemo(() => {
     return columns.reduce((acc, column) => {
       acc[column.id] = tasks.filter((task) => task.status === column.id);
@@ -336,9 +440,32 @@ const TasksPage = () => {
     }, {});
   }, [tasks]);
 
+  const selectedProject = useMemo(() => {
+    if (!filters.project) return null;
+    return projects.find((project) => String(project.id) === String(filters.project)) || null;
+  }, [filters.project, projects]);
+
+  const selectedProjectIsAdmin = ['owner', 'admin'].includes(selectedProject?.my_role);
+  const disableNewTask = Boolean(filters.project) && !selectedProjectIsAdmin;
+
+  const assigneeOptions = filters.project ? filterProjectMembers : allUsers;
+  const modalAssignees = modalProjectId ? modalProjectMembers : allUsers;
+  const editingIsProjectAdmin = editingTask?.projectId
+    ? ['owner', 'admin'].includes(editingTask.memberRole)
+    : true;
+  const canEditProject = editingTask ? editingIsProjectAdmin : true;
+  const canEditAssignee = editingTask ? editingIsProjectAdmin : true;
+  const canEditStatus = editingTask ? editingTask.canUpdateStatus : true;
+
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setFilters((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === 'project') {
+        next.assignee = '';
+      }
+      return next;
+    });
   };
 
   const clearFilters = () => {
@@ -346,17 +473,20 @@ const TasksPage = () => {
       priority: '',
       status: '',
       assignee: '',
+      project: '',
       search: ''
     });
   };
 
   const openCreateModal = () => {
     setEditingTask(null);
+    setModalProjectId(filters.project || '');
     setIsModalOpen(true);
   };
 
   const openEditModal = (task) => {
     setEditingTask(task);
+    setModalProjectId(task.projectId || '');
     setIsModalOpen(true);
   };
 
@@ -365,10 +495,31 @@ const TasksPage = () => {
     setEditingTask(null);
   };
 
+  const canDeleteTask = useCallback(
+    (task) => {
+      if (!task) return false;
+      if (task.projectId) {
+        return ['owner', 'admin'].includes(task.memberRole);
+      }
+      return task.assigneeId === user?.id || task.createdBy === user?.id;
+    },
+    [user?.id]
+  );
+
   const handleModalSubmit = async (formState) => {
+    if (!editingTask && formState.projectId) {
+      const targetProject = projects.find((project) => String(project.id) === String(formState.projectId));
+      const isAdminForCreate = ['owner', 'admin'].includes(targetProject?.my_role);
+      if (!isAdminForCreate) {
+        toast.error('Only project admins can create tasks in this project');
+        return;
+      }
+    }
+
     const payload = {
       title: formState.title.trim(),
       description: formState.description.trim(),
+      projectId: formState.projectId || null,
       priority: formState.priority,
       status: formState.status,
       assigneeId: formState.assigneeId || undefined,
@@ -391,11 +542,20 @@ const TasksPage = () => {
   };
 
   const handleDeleteTask = async (task) => {
+    if (!canDeleteTask(task)) {
+      toast.error('You do not have permission to delete this task');
+      return;
+    }
     if (!window.confirm(`Delete "${task.title}"?`)) return;
     await deleteTask(task.id);
   };
 
   const handleStatusChange = async (taskId, status) => {
+    const task = tasks.find((item) => String(item.id) === String(taskId));
+    if (task && !task.canUpdateStatus) {
+      toast.error('You do not have permission to move this task');
+      return;
+    }
     await updateTaskStatus(taskId, status);
   };
 
@@ -456,11 +616,16 @@ const TasksPage = () => {
       ) {
         return;
       }
+      const task = tasks.find((item) => String(item.id) === String(draggableId));
+      if (task && !task.canUpdateStatus) {
+        toast.error('You do not have permission to move this task');
+        return;
+      }
       if (destination.droppableId !== source.droppableId) {
         await updateTaskStatus(draggableId, destination.droppableId);
       }
     },
-    [updateTaskStatus]
+    [tasks, updateTaskStatus]
   );
 
   return (
@@ -485,7 +650,7 @@ const TasksPage = () => {
               >
                 Refresh
               </Button>
-              <Button icon={<Plus size={18} />} onClick={openCreateModal}>
+              <Button icon={<Plus size={18} />} onClick={openCreateModal} disabled={disableNewTask}>
                 New Task
               </Button>
             </div>
@@ -509,6 +674,20 @@ const TasksPage = () => {
                 />
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                <select
+                  name="project"
+                  value={filters.project}
+                  onChange={handleFilterChange}
+                  disabled={projectsLoading}
+                  className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
+                >
+                  <option value="">All projects</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
                 <select
                   name="priority"
                   value={filters.priority}
@@ -542,7 +721,7 @@ const TasksPage = () => {
                   className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:[color-scheme:dark]"
                 >
                   <option value="">All assignees</option>
-                  {members.map((member) => (
+                  {assigneeOptions.map((member) => (
                     <option key={member.id} value={member.id}>
                       {member.name}
                     </option>
@@ -585,7 +764,12 @@ const TasksPage = () => {
                           }`}
                         >
                           {groupedTasks[column.id]?.map((task, index) => (
-                            <Draggable draggableId={String(task.id)} index={index} key={task.id}>
+                            <Draggable
+                              draggableId={String(task.id)}
+                              index={index}
+                              key={task.id}
+                              isDragDisabled={!task.canUpdateStatus}
+                            >
                               {(dragProvided) => (
                                 <div
                                   ref={dragProvided.innerRef}
@@ -599,6 +783,8 @@ const TasksPage = () => {
                                     onDelete={handleDeleteTask}
                                     onStatusChange={handleStatusChange}
                                     onComments={openCommentsModal}
+                                    canEdit={task.canEdit}
+                                    canDelete={canDeleteTask(task)}
                                   />
                                 </div>
                               )}
@@ -689,9 +875,15 @@ const TasksPage = () => {
         isOpen={isModalOpen}
         onClose={closeModal}
         onSubmit={handleModalSubmit}
-        members={members}
+        members={modalAssignees}
+        projects={projects}
         initialData={editingTask}
         loading={modalLoading}
+        defaultProjectId={modalProjectId}
+        onProjectChange={setModalProjectId}
+        canEditProject={canEditProject}
+        canEditAssignee={canEditAssignee}
+        canEditStatus={canEditStatus}
       />
     </div>
   );
