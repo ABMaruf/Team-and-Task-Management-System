@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, TrendingUp } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import AnimatedCard from '../common/AnimatedCard';
 import Avatar from '../common/Avatar';
 import * as dashboardService from '../../services/dashboardService';
 
@@ -37,7 +38,7 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border shadow-sm`}>
+    <AnimatedCard className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border shadow-sm`} variant="glow">
       <div className="flex items-center gap-2 mb-6">
         <Trophy className="text-yellow-500" size={24} />
         <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
@@ -91,7 +92,7 @@ const Leaderboard = () => {
       }`}>
         View Full Leaderboard
       </button>
-    </div>
+    </AnimatedCard>
   );
 };
 
