@@ -3,6 +3,7 @@ import { Flame, TrendingUp, Calendar, RefreshCcw } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import Loader from '../common/Loader';
+import AnimatedCard from '../common/AnimatedCard';
 import * as streakService from '../../services/streakService';
 
 const dayLabel = (dateString) => {
@@ -59,7 +60,7 @@ const StreakCard = () => {
   const progressPercent = Math.min(100, Math.round((summary.current_streak / goal) * 100));
 
   return (
-    <div
+    <AnimatedCard
       className={`rounded-2xl border p-6 shadow-sm transition-all ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'
       }`}
@@ -147,7 +148,7 @@ const StreakCard = () => {
           ))}
         </div>
       </div>
-    </div>
+    </AnimatedCard>
   );
 };
 
