@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Loader from '../common/Loader';
+import AnimatedCard from '../common/AnimatedCard';
 import * as dashboardService from '../../services/dashboardService';
 
 const heatClass = (value, dark) => {
@@ -38,9 +39,9 @@ const ProductivityChart = () => {
 
   if (loading) {
     return (
-      <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border`}>
+      <AnimatedCard className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border`}>
         <Loader />
-      </div>
+      </AnimatedCard>
     );
   }
 
@@ -54,7 +55,7 @@ const ProductivityChart = () => {
     : 0;
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border shadow-sm`}>
+    <AnimatedCard className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border shadow-sm`}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
           Productivity & Flow
@@ -158,7 +159,7 @@ const ProductivityChart = () => {
           </div>
         </div>
       </div>
-    </div>
+    </AnimatedCard>
   );
 };
 

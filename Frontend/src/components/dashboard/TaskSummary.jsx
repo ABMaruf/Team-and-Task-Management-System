@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckSquare, Clock, AlertCircle, TrendingUp } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import AnimatedCard from '../common/AnimatedCard';
 import * as taskService from '../../services/taskService';
 
 const TaskSummary = ({ stats }) => {
@@ -81,7 +82,7 @@ const TaskSummary = ({ stats }) => {
   return (
     <>
       {cards.map((card, index) => (
-        <div
+        <AnimatedCard
           key={index}
           className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border shadow-sm hover:shadow-lg transition-all`}
         >
@@ -99,7 +100,7 @@ const TaskSummary = ({ stats }) => {
             </p>
             <p className="text-sm text-green-500 mt-2">{card.trend}</p>
           </div>
-        </div>
+        </AnimatedCard>
       ))}
     </>
   );

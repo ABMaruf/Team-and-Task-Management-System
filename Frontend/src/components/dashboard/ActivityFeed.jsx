@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, MessageCircle, Shuffle, Wand } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import AnimatedCard from '../common/AnimatedCard';
 import Avatar from '../common/Avatar';
 import { getTimeAgo } from '../../utils/helpers';
 import * as dashboardService from '../../services/dashboardService';
@@ -82,7 +83,7 @@ const ActivityFeed = () => {
   };
 
   return (
-    <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border shadow-sm`}>
+    <AnimatedCard className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-2xl p-6 border shadow-sm`}>
       <div className="flex items-center gap-2 mb-6">
         <Activity size={24} className="text-indigo-500" />
         <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
@@ -114,7 +115,7 @@ const ActivityFeed = () => {
           </p>
         )}
       </div>
-    </div>
+    </AnimatedCard>
   );
 };
 
